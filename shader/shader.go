@@ -1,4 +1,4 @@
-package main
+package shader
 
 import (
 	"fmt"
@@ -31,8 +31,9 @@ func createShaders(vertex_shader_path string, fragment_shader_path string) (uint
 	return vertexShader, fragmentShader
 }
 
-func createShaderProgram() uint32 {
+func CreateShaderProgram(vertex_shader_path string, fragment_shader_path string) uint32 {
 	program := gl.CreateProgram()
+	vertexShader, fragmentShader := createShaders("resources/shaders/vert.glsl", "resources/shaders/frag.glsl")
 	gl.AttachShader(program, vertexShader)
 	gl.AttachShader(program, fragmentShader)
 	gl.LinkProgram(program)

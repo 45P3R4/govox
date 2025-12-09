@@ -4,6 +4,7 @@ import (
 	"runtime"
 	"vox/input"
 	"vox/mesh"
+	"vox/shader"
 	"vox/view"
 	"vox/window"
 
@@ -26,8 +27,9 @@ func main() {
 
 	glInit()
 
-	vertexShader, fragmentShader = createShaders("shaders/vert.glsl", "shaders/frag.glsl")
-	shaderProgram = createShaderProgram()
+	input.InitInput()
+
+	shaderProgram = shader.CreateShaderProgram("resources/shaders/vert.glsl", "resources/shaders/frag.glsl")
 	gl.UseProgram(shaderProgram)
 
 	view.InitPerspectiveProjetion(shaderProgram)
@@ -35,59 +37,32 @@ func main() {
 	camera := view.NewCamera(shaderProgram)
 	println(camera)
 
-	shape := mesh.NewMesh(shaderProgram, mesh.GetSquareVertices(), mesh.GetSquareIndices())
+	m1 := mesh.NewMesh(shaderProgram, mesh.GetCubeVertices(), mesh.GetCubeIndices())
+	m2 := mesh.NewMesh(shaderProgram, mesh.GetSquareVertices(), mesh.GetSquareIndices())
 
-	input.InitInput()
+	meshPool := mesh.NewMeshPool()
 
-	var newY float32 = camera.Position[0]
-	var newZ float32 = camera.Position[1]
-	var newX float32 = camera.Position[2]
+	meshPool.AppendMesh(m1, [3]float32{0, 0, 0})
+	meshPool.AppendMesh(m2, [3]float32{2, 0, 2})
+
+	// gl.Enable(gl.CULL_FACE)
 
 	// MAIN LOOP
 	for !window.ShouldClose() {
 
 		gl.ClearColor(0.2, 0.3, 0.3, 1.0)
 		gl.Clear(gl.COLOR_BUFFER_BIT)
+		// gl.Clear(gl.DEPTH_BUFFER_BIT)
 
-		time := glfw.GetTime()
+		camera.Update()
 
-		if input.InputMap[glfw.KeyW] {
-			newZ += 0.1
-			camera.MoveCamera([3]float32{newX, newY, newZ})
-		}
-		if input.InputMap[glfw.KeyS] {
-			newZ -= 0.1
-			camera.MoveCamera([3]float32{newX, newY, newZ})
-		}
-		if input.InputMap[glfw.KeyA] {
-			newX += 0.1
-			camera.MoveCamera([3]float32{newX, newY, newZ})
-		}
-		if input.InputMap[glfw.KeyD] {
-			newX -= 0.1
-			camera.MoveCamera([3]float32{newX, newY, newZ})
-		}
-		if input.InputMap[glfw.KeySpace] {
-			newY -= 0.1
-			camera.MoveCamera([3]float32{newX, newY, newZ})
-		}
-		if input.InputMap[glfw.KeyLeftControl] {
-			newY += 0.1
-			camera.MoveCamera([3]float32{newX, newY, newZ})
-		}
-
-		angle := float32(time * 50)
-		shape.Angle = [3]float32{0, angle / 40, 0}
-
-		shape.Update()
-
-		gl.DrawElements(gl.TRIANGLES, 6, gl.UNSIGNED_INT, nil)
+		meshPool.Draw(shaderProgram)
 
 		window.SwapBuffers()
 		glfw.PollEvents()
 	}
 
-	mesh.ClearArrays()
+	meshPool.ClearBuffers()
 	gl.DeleteProgram(shaderProgram)
 	gl.DeleteShader(fragmentShader)
 	gl.DeleteShader(vertexShader)

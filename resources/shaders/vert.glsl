@@ -9,7 +9,6 @@ uniform mat4 model;
 out vec3 ourColor;
 
 void main() {
-    // Важно: Умножаем в правильном порядке!
     // projection * view * model * position
     gl_Position = projection * view * model * vec4(aPos, 1.0);
     ourColor = aColor;
