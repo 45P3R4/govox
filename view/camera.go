@@ -1,6 +1,7 @@
 package view
 
 import (
+	"fmt"
 	"vox/actor"
 	"vox/input"
 
@@ -49,24 +50,31 @@ func (c *Camera) MoveCamera(newPosition [3]float32) {
 	gl.UniformMatrix4fv(c.viewLocation, 1, false, &c.view[0])
 }
 
-func (c *Camera) RotateCamera(newRotation [3]float32) {
-	c.Rotation = newRotation
+func (c *Camera) UpdateMatrix() {
+	translateMatrix := mgl32.Translate3D(c.Position[0], c.Position[1], c.Position[2])
 
-	c.view = mgl32.LookAtV(
-		c.Position,          // Position
-		c.Rotation,          // LookAt
-		mgl32.Vec3{0, 1, 0}, // Up Vector
-	)
+	pitch := mgl32.DegToRad(c.Rotation[0])
+	yaw := mgl32.DegToRad(c.Rotation[1])
+	roll := mgl32.DegToRad(c.Rotation[2])
+
+	rotationQuat := mgl32.AnglesToQuat(yaw, pitch, roll, mgl32.YXZ)
+	rotationMatrix := rotationQuat.Mat4()
+
+	modelMatrix := translateMatrix.Mul4(rotationMatrix)
+
+	c.view = modelMatrix.Inv()
+
+	fmt.Println(c.view)
 
 	gl.UniformMatrix4fv(c.viewLocation, 1, false, &c.view[0])
 }
 
 func (camera *Camera) Update() {
 	if input.InputMap[glfw.KeyW] {
-		camera.Position[2] += 0.1
+		camera.Position[2] -= 0.1
 	}
 	if input.InputMap[glfw.KeyS] {
-		camera.Position[2] -= 0.1
+		camera.Position[2] += 0.1
 	}
 	if input.InputMap[glfw.KeyA] {
 		camera.Position[0] += 0.1
@@ -81,5 +89,10 @@ func (camera *Camera) Update() {
 		camera.Position[1] += 0.1
 	}
 
-	camera.MoveCamera(camera.Position)
+	sensetive := float32(3)
+	camera.Rotation[1] = float32(input.MouseX) / sensetive
+	camera.Rotation[0] = float32(input.MouseY) / sensetive
+
+	camera.UpdateMatrix()
+
 }

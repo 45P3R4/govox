@@ -25,6 +25,7 @@ func CreateWindow(width int, height int, title string) *glfw.Window {
 
 	window.SetSizeCallback(sizeCallback)
 	window.SetKeyCallback(input.KeyCallback)
+	window.SetCursorPosCallback(input.MousePositionCallback)
 
 	return window
 }
