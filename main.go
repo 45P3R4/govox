@@ -12,8 +12,6 @@ import (
 	"github.com/go-gl/glfw/v3.3/glfw"
 )
 
-var vertexShader uint32
-var fragmentShader uint32
 var shaderProgram uint32
 
 func main() {
@@ -22,7 +20,7 @@ func main() {
 	glfwInit()
 	defer glfw.Terminate()
 
-	window := window.CreateWindow(800, 600, "VOX")
+	window := window.CreateWindow(800, 600, "govox")
 	defer window.Destroy()
 
 	glInit()
@@ -64,6 +62,5 @@ func main() {
 
 	meshPool.ClearBuffers()
 	gl.DeleteProgram(shaderProgram)
-	gl.DeleteShader(fragmentShader)
-	gl.DeleteShader(vertexShader)
+	shader.ClearShaders()
 }

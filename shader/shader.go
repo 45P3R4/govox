@@ -2,12 +2,14 @@ package shader
 
 import (
 	"fmt"
-	"log"
 	"os"
 
 	"github.com/go-gl/gl/v4.6-core/gl"
 	"github.com/go-gl/glfw/v3.3/glfw"
 )
+
+var fragmentShader uint32
+var vertexShader uint32
 
 func createShaders(vertex_shader_path string, fragment_shader_path string) (uint32, uint32) {
 	vertexShaderSource, err := os.ReadFile(vertex_shader_path)
@@ -21,11 +23,11 @@ func createShaders(vertex_shader_path string, fragment_shader_path string) (uint
 
 	vertexShader, err := compileShader(string(vertexShaderSource), gl.VERTEX_SHADER)
 	if err != nil {
-		log.Fatal(err)
+		fmt.Println(err)
 	}
 	fragmentShader, err := compileShader(string(fragmentShaderSource), gl.FRAGMENT_SHADER)
 	if err != nil {
-		log.Fatal(err)
+		fmt.Println(err)
 	}
 
 	return vertexShader, fragmentShader
@@ -33,7 +35,7 @@ func createShaders(vertex_shader_path string, fragment_shader_path string) (uint
 
 func CreateShaderProgram(vertex_shader_path string, fragment_shader_path string) uint32 {
 	program := gl.CreateProgram()
-	vertexShader, fragmentShader := createShaders("resources/shaders/vert.glsl", "resources/shaders/frag.glsl")
+	vertexShader, fragmentShader = createShaders("resources/shaders/vert.glsl", "resources/shaders/frag.glsl")
 	gl.AttachShader(program, vertexShader)
 	gl.AttachShader(program, fragmentShader)
 	gl.LinkProgram(program)
@@ -59,4 +61,9 @@ func compileShader(source string, shaderType uint32) (uint32, error) {
 	}
 
 	return shader, nil
+}
+
+func ClearShaders() {
+	gl.DeleteShader(fragmentShader)
+	gl.DeleteShader(vertexShader)
 }
