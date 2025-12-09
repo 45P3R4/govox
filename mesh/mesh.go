@@ -28,3 +28,7 @@ func NewMesh(shaderProgram uint32, vertices []float32, indices []uint32) Mesh {
 
 	return s
 }
+
+func (m *Mesh) UpdateModelMatrix() {
+	m.model = mgl32.Translate3D(m.Position[0], m.Position[1], m.Position[2])
+}

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"math/rand"
 	"runtime"
 	"vox/input"
 	"vox/mesh"
@@ -43,17 +44,28 @@ func main() {
 	meshPool.AppendMesh(m1, [3]float32{0, 0, 0})
 	meshPool.AppendMesh(m2, [3]float32{2, 0, 2})
 
-	// gl.Enable(gl.CULL_FACE)
+	for i := 0; i < 1000; i++ {
+		mesh := mesh.NewMesh(shaderProgram, mesh.GetCubeVertices(), mesh.GetCubeIndices())
+
+		randX := float32(rand.Intn(101) - 50)
+		randY := float32(rand.Intn(101) - 50)
+		randZ := float32(rand.Intn(101) - 50)
+		meshPool.AppendMesh(mesh, [3]float32{randX, randY, randZ})
+	}
+
+	gl.Enable(gl.CULL_FACE)
+	gl.Enable(gl.DEPTH_TEST)
 
 	// MAIN LOOP
 	for !window.ShouldClose() {
 
-		gl.ClearColor(0.2, 0.3, 0.3, 1.0)
+		gl.ClearColor(0.0, 0.0, 0.0, 1.0)
 		gl.Clear(gl.COLOR_BUFFER_BIT)
-		// gl.Clear(gl.DEPTH_BUFFER_BIT)
+		gl.Clear(gl.DEPTH_BUFFER_BIT)
 
 		camera.Update()
 
+		meshPool.UpdateMeshes()
 		meshPool.Draw(shaderProgram)
 
 		window.SwapBuffers()

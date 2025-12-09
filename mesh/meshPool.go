@@ -74,6 +74,7 @@ func (mp *MeshPool) Draw(shaderProgram uint32) {
 
 	gl.BindVertexArray(mp.VAO)
 
+	var currentIndex int32 = 0
 	for i := range mp.meshes {
 		mesh := &mp.meshes[i]
 
@@ -81,10 +82,23 @@ func (mp *MeshPool) Draw(shaderProgram uint32) {
 			mesh.location = gl.GetUniformLocation(shaderProgram, gl.Str("model\x00"))
 		}
 
+		// Устанавливаем матрицу модели для этого меша
 		gl.UniformMatrix4fv(mesh.location, 1, false, &mesh.model[0])
-	}
 
-	gl.DrawElements(gl.TRIANGLES, mp.totalIndices, gl.UNSIGNED_INT, nil)
+		// Вычисляем количество индексов для этого меша
+		indicesCount := int32(len(mesh.indices))
+
+		// Рисуем только индексы этого меша
+		gl.DrawElementsBaseVertex(
+			gl.TRIANGLES,
+			indicesCount,
+			gl.UNSIGNED_INT,
+			gl.PtrOffset(int(currentIndex*4)), // Смещение в байтах
+			0,
+		)
+
+		currentIndex += indicesCount
+	}
 
 	gl.BindVertexArray(0)
 }
@@ -106,4 +120,17 @@ func (mp *MeshPool) bindBuffers() {
 	gl.BufferData(gl.ELEMENT_ARRAY_BUFFER, len(mp.indexData)*4, gl.Ptr(mp.indexData), gl.STATIC_DRAW)
 
 	gl.BindVertexArray(0)
+}
+
+func (mp *MeshPool) UpdateMeshes() {
+	for i := range mp.meshes {
+
+		// r := float64(i + 1)
+		// time := glfw.GetTime() / 100000
+		// mp.meshes[i].Position[0] += float32(math.Sin(time * r))
+		// mp.meshes[i].Position[1] += float32(math.Cos(time * r))
+		// mp.meshes[i].Position[2] += float32(math.Cos(time * r))
+		mp.meshes[i].UpdateModelMatrix()
+	}
+	mp.isUpdated = true
 }
