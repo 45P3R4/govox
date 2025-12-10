@@ -1,7 +1,7 @@
 package view
 
 import (
-	"fmt"
+	"math"
 	"vox/actor"
 	"vox/input"
 
@@ -9,6 +9,8 @@ import (
 	"github.com/go-gl/glfw/v3.3/glfw"
 	"github.com/go-gl/mathgl/mgl32"
 )
+
+var speed float32 = 0.1
 
 type Camera struct {
 	actor.Actor
@@ -41,17 +43,14 @@ func NewCamera(shaderProgram uint32) *Camera {
 	return &c
 }
 
-func (c *Camera) MoveCamera(newPosition [3]float32) {
-	c.Position = newPosition
-
-	translateMatrix := mgl32.Translate3D(newPosition[0], newPosition[1], newPosition[2])
-	c.view = translateMatrix
-
-	gl.UniformMatrix4fv(c.viewLocation, 1, false, &c.view[0])
-}
-
 func (c *Camera) UpdateMatrix() {
-	translateMatrix := mgl32.Translate3D(c.Position[0], c.Position[1], c.Position[2])
+	posX := c.Position[0]
+	posY := c.Position[1]
+	posZ := c.Position[2]
+
+	c.Rotation[0] = mgl32.Clamp(c.Rotation[0], -90, 90)
+
+	translateMatrix := mgl32.Translate3D(posX, posY, posZ)
 
 	pitch := mgl32.DegToRad(c.Rotation[0])
 	yaw := mgl32.DegToRad(c.Rotation[1])
@@ -64,35 +63,53 @@ func (c *Camera) UpdateMatrix() {
 
 	c.view = modelMatrix.Inv()
 
-	fmt.Println(c.view)
-
 	gl.UniformMatrix4fv(c.viewLocation, 1, false, &c.view[0])
 }
 
-func (camera *Camera) Update() {
+func (c *Camera) GetForwardYaw() (forward mgl32.Vec3) {
+	yaw := float64(mgl32.DegToRad(c.Rotation[1]))
+
+	forwardX := -math.Sin(yaw)
+	forwardY := 0
+	forwardZ := -math.Cos(yaw)
+
+	forward = mgl32.Vec3{
+		float32(forwardX),
+		float32(forwardY),
+		float32(forwardZ),
+	}.Normalize()
+
+	return
+}
+
+func (c *Camera) GetRightYaw() (forward mgl32.Vec3) {
+	return c.GetForwardYaw().Cross(c.UpVector)
+}
+
+func (c *Camera) Update() {
 	if input.InputMap[glfw.KeyW] {
-		camera.Position[2] -= 0.1
+		c.Position = c.Position.Add(c.GetForwardYaw().Mul(speed))
 	}
 	if input.InputMap[glfw.KeyS] {
-		camera.Position[2] += 0.1
+		c.Position = c.Position.Sub(c.GetForwardYaw().Mul(speed))
 	}
 	if input.InputMap[glfw.KeyA] {
-		camera.Position[0] += 0.1
+		c.Position = c.Position.Sub(c.GetRightYaw().Mul(speed))
 	}
 	if input.InputMap[glfw.KeyD] {
-		camera.Position[0] -= 0.1
+		c.Position = c.Position.Add(c.GetRightYaw().Mul(speed))
 	}
 	if input.InputMap[glfw.KeySpace] {
-		camera.Position[1] -= 0.1
+		c.Position = c.Position.Add(c.UpVector.Mul(speed))
 	}
 	if input.InputMap[glfw.KeyLeftControl] {
-		camera.Position[1] += 0.1
+		c.Position = c.Position.Sub(c.UpVector.Mul(speed))
 	}
 
 	sensetive := float32(3)
-	camera.Rotation[1] = float32(input.MouseX) / sensetive
-	camera.Rotation[0] = float32(input.MouseY) / sensetive
+	c.Rotation[1] = float32(-input.MouseX) / sensetive
+	c.Rotation[0] = float32(-input.MouseY) / sensetive
 
-	camera.UpdateMatrix()
+	c.UpdateMatrix()
 
 }
