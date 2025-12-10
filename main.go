@@ -59,6 +59,17 @@ func main() {
 	// MAIN LOOP
 	for !window.ShouldClose() {
 
+		if input.InputMap[glfw.KeyEscape] {
+			window.SetShouldClose(true)
+		}
+
+		if input.InputMap[glfw.KeyU] {
+			window.SetInputMode(glfw.CursorMode, glfw.CursorNormal)
+		}
+		if input.InputMap[glfw.KeyL] {
+			window.SetInputMode(glfw.CursorMode, glfw.CursorDisabled)
+		}
+
 		gl.ClearColor(0.0, 0.0, 0.0, 1.0)
 		gl.Clear(gl.COLOR_BUFFER_BIT)
 		gl.Clear(gl.DEPTH_BUFFER_BIT)
